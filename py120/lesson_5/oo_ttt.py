@@ -1,5 +1,9 @@
 import random
+import os
 
+def clear_screen():
+    os.system('clear')
+    
 class Square:
     INITIAL_MARKER = " "
     HUMAN_MARKER = "X"
@@ -55,10 +59,12 @@ class Board:
                 for key, square in self.squares.items()
                 if square.is_unused()]
 
-class Row:
-    def __init__(self):
-        #STUB
-        pass
+    def is_full(self):
+        return len(self.unused_squares()) == 0
+
+    def count_markers_for(self, player, keys):
+        markers = [self.squares[key].marker for key in keys]
+        return markers.count(player.marker)
 
 class Player:
     def __init__(self, marker):
@@ -81,6 +87,17 @@ class Computer(Player):
         super().__init__(Square.COMPUTER_MARKER)
 
 class TTTGame:
+    POSSIBLE_WINNING_ROWS = (
+        (1, 2, 3),
+        (4, 5, 6),
+        (7, 8, 9),
+        (1, 4, 7),
+        (2, 5, 8),
+        (3, 6, 9),
+        (1, 5, 9),
+        (3, 5, 7),
+    )
+
     def __init__(self):
         self.board = Board()
         self.human = Human()
@@ -111,8 +128,19 @@ class TTTGame:
         print('Thanks for playing Tic Tac Toe! Goodbye!')
 
     def display_results(self):
-        #STUB
-        pass
+        if self.is_winner(self.human):
+            print("You won! Congratulations!")
+        elif self.is_winner(self.computer):
+            print("I won! I won! Take that, human!")
+        else:
+            print("A tie game.  How boring.")
+
+    def is_winner(self, player):
+        for row in TTTGame.POSSIBLE_WINNING_ROWS:
+            if self.three_in_a_row(player, row):
+                return True
+
+        return False
 
     def human_moves(self):
         valid_choices = self.board.unused_squares()
@@ -141,8 +169,14 @@ class TTTGame:
         self.board.mark_square_at(choice, self.computer.marker)
     
     def is_game_over(self):
-        #STUB
-        return False
+        return self.board.is_full() or self.someone_won()
+
+    def three_in_a_row(self, player, row):
+        return self.board.count_markers_for(player, row) == 3
+
+    def someone_won(self):
+        return (self.is_winner(self.human) or
+                self.is_winner(self.computer))
 
 game = TTTGame()
 game.play()
