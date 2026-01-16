@@ -3,7 +3,7 @@ import os
 
 def clear_screen():
     os.system('clear')
-    
+
 class Square:
     INITIAL_MARKER = " "
     HUMAN_MARKER = "X"
@@ -29,7 +29,7 @@ class Square:
 class Board:
     def __init__(self):
         self.squares = {key: Square() for key in range(1, 10)}
-    
+
     def display(self):
         print()
         print("     |     |")
@@ -50,7 +50,7 @@ class Board:
               f"  {self.squares[9]}")
         print("     |     |")
         print()
-    
+
     def display_with_clear(self):
         clear_screen()
         print("\n")
@@ -70,11 +70,14 @@ class Board:
     def count_markers_for(self, player, keys):
         markers = [self.squares[key].marker for key in keys]
         return markers.count(player.marker)
+    
+    def reset(self):
+        self.squares = {key: Square() for key in range(1, 10)}
 
 class Player:
     def __init__(self, marker):
         self.marker = marker
-    
+
     @property
     def marker(self):
         return self._marker
@@ -110,7 +113,17 @@ class TTTGame:
 
     def play(self):
         self.display_welcome_message()
-        self.board.display()
+
+        while True:
+            self.play_one_round()
+            if self.play_again() == 'n':
+                break
+
+        self.display_goodbye_message()
+
+    def play_one_round(self):
+        self.board.reset()
+        self.board.display_with_clear()
 
         while True:
             self.human_moves()
@@ -120,13 +133,12 @@ class TTTGame:
             self.computer_moves()
             if self.is_game_over():
                 break
-            
+
             self.board.display_with_clear()
-        
+
         self.board.display_with_clear()
         self.display_results()
-        self.display_goodbye_message()
-    
+
     def display_welcome_message(self):
         clear_screen()
         print('Welcome to Tic Tac Toe!')
@@ -149,14 +161,25 @@ class TTTGame:
                 return True
 
         return False
+    
+    @staticmethod
+    def _join_or(choices, punctuation=', ', conjunction='or'):
+        str_choices = [str(choice) for choice in choices]
+
+        if len(str_choices) == 1:
+            return str_choices[0]
+        if len(str_choices) == 2:
+            return f"{str_choices[0]} {conjunction} {str_choices[1]}"
+
+        last = str_choices[-1]
+        initial = str_choices[:-1]
+        return punctuation.join(initial) + punctuation + conjunction + ' ' + last
 
     def human_moves(self):
-        valid_choices = self.board.unused_squares()
-
         while True:
-            choices_list = [str(choice) for choice in valid_choices]
-            choices_str = ", ".join(choices_list)
-            prompt = f"Choose a square ({choices_str}): "
+            valid_choices = self.board.unused_squares()
+            printable_choices = TTTGame._join_or(valid_choices)
+            prompt = f"Choose a square ({printable_choices}): "
             choice = input(prompt)
 
             try:
@@ -175,7 +198,7 @@ class TTTGame:
         valid_choices = self.board.unused_squares()
         choice = random.choice(valid_choices)
         self.board.mark_square_at(choice, self.computer.marker)
-    
+
     def is_game_over(self):
         return self.board.is_full() or self.someone_won()
 
@@ -186,6 +209,13 @@ class TTTGame:
         return (self.is_winner(self.human) or
                 self.is_winner(self.computer))
 
+    def play_again(self):
+        answer = input("Play again? Enter 'y' or 'n' ")
+        while True:
+            valid_answers = ('y', 'n')
+            if answer.casefold() in valid_answers:
+                return answer.casefold()
+            answer = input("Invalid answer. Enter only 'y' or 'n' ")
+
 game = TTTGame()
 game.play()
-
