@@ -79,17 +79,10 @@ class Participant:
 class Player(Participant):
     def __init__(self):
         super().__init__()
-        self.balance = 5
 
 class Dealer(Participant):
     def __init__(self):
         super().__init__()
-
-    def hit(self, deck):
-        super().hit(deck)
-
-    def stay(self):
-        pass
 
     def hide(self):
         return ["???????"] + self.hand[1:]
@@ -147,8 +140,15 @@ class TwentyOneGame:
             self.player_turn()
             self.dealer_turn()
             self.display_result()
+            print()
             self.balance.update(self.result())
             self.balance.display()
+            if self.balance.is_broke():
+                print("You're broke! Game Over.")
+                break
+            if self.balance.is_rich():
+                print("You're rich and the house always wins! Game Over.")
+                break
             if not self.play_again():
                 break
             self.player.new_hand()
