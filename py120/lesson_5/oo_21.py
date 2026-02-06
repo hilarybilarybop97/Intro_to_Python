@@ -15,8 +15,8 @@ class Card:
     def __repr__(self):
         return f"{self.rank} of {self.suit}"
 
-    def value(self, rank):
-        return Card.VALUES[rank]
+    def value(self):
+        return Card.VALUES[self.rank]
 
 class Deck:
     SUITS = ('Hearts', 'Diamonds', 'Spades', 'Clubs')
@@ -66,7 +66,7 @@ class Participant:
         aces = 0
 
         for card in self.hand:
-            total += card.value(card.rank)
+            total += card.value()
             if card.rank == 'Ace':
                 aces += 1
 
@@ -85,7 +85,7 @@ class Dealer(Participant):
         super().__init__()
 
     def hide(self):
-        return ["???????"] + self.hand[1:]
+        return ["???????"] + [str(card) for card in self.hand[1:]]
 
     def reveal(self):
         print()
