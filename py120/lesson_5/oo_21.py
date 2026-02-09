@@ -1,13 +1,21 @@
 import random
+import os
+import time
+
+def clear_screen():
+    os.system('clear')
 
 class Card:
+    SUITS = ('Hearts', 'Diamonds', 'Spades', 'Clubs')
+    RANKS = ('2', '3', '4', '5', '6', '7', '8', '9', '10',
+             'Jack', 'Queen', 'King', 'Ace')
     VALUES = {'1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6,
               '7': 7, '8': 8, '9': 9, '10': 10, 'Jack': 10, 
               'Queen': 10, 'King': 10, 'Ace': 11}
 
     def __init__(self, rank, suit):
-        self.suit = suit
-        self.rank = rank
+        self._suit = suit
+        self._rank = rank
 
     def __str__(self):
         return f"{self.rank} of {self.suit}"
@@ -15,15 +23,21 @@ class Card:
     def __repr__(self):
         return f"{self.rank} of {self.suit}"
 
+    @property
+    def rank(self):
+        return self._rank
+
+    @property
+    def suit(self):
+        return self._suit
+
     def value(self):
         return Card.VALUES[self.rank]
 
 class Deck:
-    SUITS = ('Hearts', 'Diamonds', 'Spades', 'Clubs')
-    RANKS = ('2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace')
-
     def __init__(self):
-        self.deck = [Card(rank, suit) for rank in Deck.RANKS for suit in Deck.SUITS]
+        self.deck = [Card(rank, suit) for rank in Card.RANKS
+                                      for suit in Card.SUITS]
         self.shuffle()
 
     def shuffle(self):
@@ -39,7 +53,8 @@ class Deck:
         return f"{self.deck}"
 
     def reshuffle(self):
-        self.deck = [Card(rank, suit) for rank in Deck.RANKS for suit in Deck.SUITS]
+        self.deck = [Card(rank, suit) for rank in Card.RANKS
+                                      for suit in Card.SUITS]
         self.shuffle()
 
 class Participant:
@@ -53,9 +68,9 @@ class Participant:
         pass
 
     def is_busted(self):
-        if self.score() > 21:
+        if self.score() > TwentyOneGame.TARGET_SCORE:
             return True
-        
+
         return False
 
     def new_hand(self):
@@ -70,7 +85,7 @@ class Participant:
             if card.rank == 'Ace':
                 aces += 1
 
-        while total > 21 and aces:
+        while total > TwentyOneGame.TARGET_SCORE and aces:
             total -= 10
             aces -= 1
 
@@ -93,13 +108,17 @@ class Dealer(Participant):
         for card in self.hand:
             print(f"==> {card}")
 
-        print()        
+        print()
         print(f"Dealer's score: {self.score()}")
         print()
 
 class Wager:
+    BROKE = 0
+    RICH = 10
+    INITIAL_WAGER = 5
+
     def __init__(self):
-        self.balance = 5
+        self.balance = Wager.INITIAL_WAGER
 
     def __str__(self):
         return f"${self.balance}"
@@ -113,18 +132,21 @@ class Wager:
         elif result == 'loss':
             self.balance -= 1
         else:
-            pass 
+            pass
 
     def is_broke(self):
-        return self.balance == 0
+        return self.balance == Wager.BROKE
 
     def is_rich(self):
-        return self.balance == 10
+        return self.balance == Wager.RICH
 
     def display(self):
         print(f"Current balance is: {self}")
 
 class TwentyOneGame:
+    TARGET_SCORE = 21
+    DEALER_STAY = TARGET_SCORE - 4
+
     def __init__(self):
         self.dealer = Dealer()
         self.player = Player()
@@ -138,9 +160,9 @@ class TwentyOneGame:
             self.deal_cards()
             self.show_cards()
             self.player_turn()
+            clear_screen()
             self.dealer_turn()
             self.display_result()
-            print()
             self.balance.update(self.result())
             self.balance.display()
             if self.balance.is_broke():
@@ -180,7 +202,7 @@ class TwentyOneGame:
             print(f'==> {card}')
         print()
         print(f"Player's score: {self.player.score()}")
-        
+
     def player_turn(self):
         print()
         print("Player goes first:")
@@ -215,9 +237,10 @@ class TwentyOneGame:
 
         print()
         print("Dealer's turn...")
+        time.sleep(1)
         self.dealer.reveal()
-        
-        while self.dealer.score() < 17:
+
+        while self.dealer.score() < TwentyOneGame.DEALER_STAY:
             print("Dealer hits!")
             self.dealer.hit(self.deck)
             self.dealer.reveal()
@@ -232,9 +255,11 @@ class TwentyOneGame:
     def display_welcome_message(self):
         print("Welcome to Twenty-One!")
         print()
-        print("The player whose hand comes closest to 21 points in value wins the hand.")
+        print("The player whose hand comes closest to 21"
+               "points in value wins the hand.")
         print()
-        print("Each player begins with $5 to bet with. Each wager is worth $1.")
+        print(f"Each player begins with ${Wager.INITIAL_WAGER} to bet with."
+               "Each wager is worth $1.")
 
     def display_goodbye_message(self):
         print()
@@ -244,24 +269,24 @@ class TwentyOneGame:
     def find_winner(self):
         if self.player.is_busted():
             return self.dealer
-        elif self.dealer.is_busted():
+        if self.dealer.is_busted():
             return self.player
-        elif self.player.score() > self.dealer.score():
+        if self.player.score() > self.dealer.score():
             return self.player
-        elif self.dealer.score() > self.player.score():
+        if self.dealer.score() > self.player.score():
             return self.dealer
-        else:
-            return "tie"
+
+        return "tie"
 
     def result(self):
         game_result = self.find_winner()
 
         if game_result == self.dealer:
             return 'loss'
-        elif game_result == self.player:
+        if game_result == self.player:
             return 'win'
-        else:
-            return 'tie'
+
+        return 'tie'
 
     def display_result(self):
         if self.find_winner() == self.dealer:
@@ -278,7 +303,7 @@ class TwentyOneGame:
             if choice in ['y', 'n']:
                 break
             print("Enter only 'y' or 'n'. ")
-        
+
         return choice == 'y'
 
 game = TwentyOneGame()
