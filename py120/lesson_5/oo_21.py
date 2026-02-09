@@ -165,11 +165,8 @@ class TwentyOneGame:
             self.display_result()
             self.balance.update(self.result())
             self.balance.display()
-            if self.balance.is_broke():
-                print("You're broke! Game Over.")
-                break
-            if self.balance.is_rich():
-                print("You're rich and the house always wins! Game Over.")
+            if self.is_game_over():
+                self.display_is_game_over_message()
                 break
             if not self.play_again():
                 break
@@ -295,6 +292,15 @@ class TwentyOneGame:
             print("You win!")
         else:
             print("It's a tie!")
+
+    def is_game_over(self):
+        return self.balance.is_broke() or self.balance.is_rich()
+
+    def display_is_game_over_message(self):
+        if self.balance.is_broke():
+            print("Sorry! You're broke! Game Over.")
+        elif self.balance.is_rich():
+            print("You're rich and the house always wins! Game Over.")
 
     def play_again(self):
         while True:
