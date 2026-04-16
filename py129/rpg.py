@@ -15,10 +15,11 @@ class MagicMixin:
 class Player:
     RANDOM_LOW = 2
     RANDOM_HIGH = 12
+    FULL_HEALTH = 100
 
     def __init__(self, name):
         self.name = name
-        self.health = 100
+        self.health = Player.FULL_HEALTH
         self.strength = 0
         self.intelligence = 0
         self.set_strength()
